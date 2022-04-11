@@ -1,0 +1,336 @@
+{include file="admin:public:header"}
+<style>
+    .avatar-uploader .el-upload {
+        border: 1px dashed #d9d9d9;
+        border-radius: 6px;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .avatar-uploader .el-upload:hover {
+        border-color: #409EFF;
+    }
+
+    .avatar-uploader-icon {
+        font-size: 28px;
+        color: #8c939d;
+        width: 128px;
+        height: 128px;
+        line-height: 128px;
+        text-align: center;
+    }
+
+    .avatar {
+        width: 128px;
+        height: 128px;
+        display: block;
+    }
+</style>
+<div id="app">
+    <el-card shadow="never" style="border: 0" body-style="background-color: #f3f3f3;padding: 10px 0 0;">
+        <div slot="header">
+            <div>
+                <span>友情合作商分类</span>
+            </div>
+        </div>
+    </el-card>
+    <!--组件-->
+
+    <el-card>
+        <el-row>
+            <el-button type="success" size="mini" @click="adds">添加</el-button>
+        </el-row>
+    </el-card>
+    <!--组件-->
+    
+    <!--表格列表-->
+    <el-card>
+        <template>
+            <el-table ref="multipleTable" :header-cell-style="{background:'#eef1f6',color:'#606266'}"
+                :data="tableData.slice((currentPage)/pagesize,currentPage*pagesize)" tooltip-effect="dark"
+                style="width: 100%" border>
+                <el-table-column prop="zh_CN" label="分类名称" align="center" show-overflow-tooltip></el-table-column>
+                <el-table-column prop="sort" label="排序" align="center" show-overflow-tooltip></el-table-column>
+                <el-table-column fixed="right" label="操作" align="center">
+                    <template #default="scope">
+                        <el-button @click="edits(scope.row)" type="primary" size="mini" icon="el-icon-edit">编辑
+                        </el-button>
+                        <el-button @click="deles(scope.row)" type="danger" size="mini" icon="el-icon-delete">删除
+                        </el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <el-pagination background style="margin-top: 10px" @size-change="handleSizeChange"
+                @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 30, 40]"
+                :page-size="100" layout="total, sizes, prev, pager, next, jumper" :total="count">
+            </el-pagination>
+        </template>
+    </el-card>
+    <!--添加弹框组件-->
+    <el-dialog title="添加" :visible.sync="add" @close="dialog" center>
+        <el-form ref="form" :model="form" label-width="150px">
+            <el-form-item label="分类名称(英语)">
+                <el-input v-model="form.en_US"></el-input>
+            </el-form-item>
+            <el-form-item label="分类名称(中文繁体)">
+                <el-input v-model="form.zh_TW"></el-input>
+            </el-form-item>
+            <el-form-item label="分类名称(中文简体)">
+                <el-input v-model="form.zh_CN"></el-input>
+            </el-form-item>
+            <el-form-item label="分类名称(土耳其)">
+                <el-input v-model="form.tr_TR"></el-input>
+            </el-form-item>
+            <el-form-item label="分类名称(韩语)">
+                <el-input v-model="form.ko_KR"></el-input>
+            </el-form-item>
+            <el-form-item label="分类名称(日语)">
+                <el-input v-model="form.ja_JP"></el-input>
+            </el-form-item>
+            <el-form-item label="分类名称(印度尼西亚语)">
+                <el-input v-model="form.in"></el-input>
+            </el-form-item>
+            <el-form-item label="分类名称(泰语)">
+                <el-input v-model="form.th"></el-input>
+            </el-form-item>
+            <el-form-item label="分类名称(阿拉伯语)">
+                <el-input v-model="form.ar"></el-input>
+            </el-form-item>
+            <el-form-item label="排序">
+                <el-input-number v-model="form.sort" controls-position="right" :min="1" :max="999999999999"></el-input-number>
+            </el-form-item>
+        </el-form>
+
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button type="primary" @click="addForm">确 定</el-button>
+                <el-button @click="add = false">取 消</el-button>
+            </span>
+        </template>
+    </el-dialog>
+    <!--编辑弹框组件-->
+    <el-dialog title="编辑" :visible.sync="edit" @close="dialog" center>
+        <el-form ref="form" :model="form" label-width="150px">
+            <el-form-item label="分类名称(英语)">
+                <el-input v-model="form.en_US"></el-input>
+            </el-form-item>
+            <el-form-item label="分类名称(中文繁体)">
+                <el-input v-model="form.zh_TW"></el-input>
+            </el-form-item>
+            <el-form-item label="分类名称(中文简体)">
+                <el-input v-model="form.zh_CN"></el-input>
+            </el-form-item>
+            <el-form-item label="分类名称(土耳其)">
+                <el-input v-model="form.tr_TR"></el-input>
+            </el-form-item>
+            <el-form-item label="分类名称(韩语)">
+                <el-input v-model="form.ko_KR"></el-input>
+            </el-form-item>
+            <el-form-item label="分类名称(日语)">
+                <el-input v-model="form.ja_JP"></el-input>
+            </el-form-item>
+            <el-form-item label="分类名称(印度尼西亚语)">
+                <el-input v-model="form.in"></el-input>
+            </el-form-item>
+            <el-form-item label="分类名称(泰语)">
+                <el-input v-model="form.th"></el-input>
+            </el-form-item>
+            <el-form-item label="分类名称(阿拉伯语)">
+                <el-input v-model="form.ar"></el-input>
+            </el-form-item>
+            <el-form-item label="排序">
+                <el-input-number v-model="form.sort" controls-position="right" :min="1" :max="999999999999"></el-input-number>
+            </el-form-item>
+        </el-form>
+
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button type="primary" @click="editForm">确 定</el-button>
+                <el-button @click="edit = false">取 消</el-button>
+            </span>
+        </template>
+    </el-dialog>
+</div>
+{include file="admin:public:bottom"}
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            currentPage: 1,
+            tableData: [],
+            search: "",
+            add: false,
+            edit: false,
+            permissions: false,
+            partners:false,
+            form: {
+                sort:1
+            },
+            pagesize: 10,
+            count: 0,
+            mneuList: [],
+            options:[],
+            defaultProps: {
+                children: 'children',
+                label: 'name',
+                value: 'id',
+
+            },
+            mid: [],
+        },
+        created() {
+            let that = this;
+            that.localhost();
+            that.getMenuList();
+        },
+        methods: {
+            localhost() {
+                let that = this;
+                axios.post('{:url("Admin/spacepiPartnersList")}', {
+                    page: that.$data.currentPage,
+                    rows: that.$data.pagesize,
+                }).then(function (response) {
+                    that.$data.tableData = response.data.data;
+                    that.$data.count = response.data.count;
+                }).catch(function (error) {
+                    console.log(error);
+                });
+            },
+            beforeAvatarUpload(file) {
+
+            },
+            //分页数量
+            handleSizeChange(res) {
+                let that = this;
+                that.$data.pagesize = res;
+                that.localhost();
+            },
+            //分页页数
+            handleCurrentChange(res) {
+                let that = this;
+                that.$data.currentPage = res;
+                that.localhost();
+            },
+            //添加触发
+            adds() {
+                let that = this;
+                that.$data.add = true;
+            },
+            edits: function (res) {
+                let that = this;
+                that.$data.form = res;
+                that.$data.form.password = '';
+                that.$data.edit = true;
+            },
+            //关闭弹框触发
+            dialog() {
+                let that = this;
+                that.$data.mid = [];
+                that.$data.form = {
+                    sort:1
+                };
+                if (!that.add != true) {
+                    that.$refs.tree.setCheckedKeys([]);
+                }
+
+            },
+            //添加表单提交
+            addForm() {
+                let that = this;
+                if (that.$data.form.en_US == undefined || that.$data.form.en_US == '' ||
+                    that.$data.form.zh_TW == undefined || that.$data.form.zh_TW == '' ||
+                    that.$data.form.zh_CN == undefined || that.$data.form.zh_CN == '' ||
+                    that.$data.form.tr_TR == undefined || that.$data.form.tr_TR == '' ||
+                    that.$data.form.ko_KR == undefined || that.$data.form.ko_KR == '' ||
+                    that.$data.form.ja_JP == undefined || that.$data.form.ja_JP == '' ||
+                    that.$data.form.in == undefined || that.$data.form.in == '' ||
+                    that.$data.form.th == undefined || that.$data.form.th == '' ||
+                    that.$data.form.ar == undefined || that.$data.form.ar == ''
+                    ) {
+                    that.$message.error("请输入全部标题字段不能为空");
+                    return false;
+                }
+                axios.post('{:url("Admin/addPartnersList")}', that.$data.form)
+                    .then(function (response) {
+                        if (response.data.code != 200) {
+                            that.$message.error(response.data.message);
+                        } else {
+                            that.$message.success({
+                                message: response.data.message,
+                                type: 'success'
+                            });
+                            that.$data.add = false;
+                            that.$data.form = {
+                                sort:1
+                            };
+                            that.localhost();
+                        }
+
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+            //编辑表单提交
+            editForm(res) {
+                let that = this;
+                if (that.$data.form.en_US == undefined || that.$data.form.en_US == '' ||
+                    that.$data.form.zh_TW == undefined || that.$data.form.zh_TW == '' ||
+                    that.$data.form.zh_CN == undefined || that.$data.form.zh_CN == '' ||
+                    that.$data.form.tr_TR == undefined || that.$data.form.tr_TR == '' ||
+                    that.$data.form.ko_KR == undefined || that.$data.form.ko_KR == '' ||
+                    that.$data.form.ja_JP == undefined || that.$data.form.ja_JP == '' ||
+                    that.$data.form.in == undefined || that.$data.form.in == '' ||
+                    that.$data.form.th == undefined || that.$data.form.th == '' ||
+                    that.$data.form.ar == undefined || that.$data.form.ar == ''
+                    ) {
+                    that.$message.error("请输入全部标题字段不能为空");
+                    return false;
+                }
+                
+                axios.post('{:url("Admin/editPartnersList")}', that.$data.form)
+                    .then(function (response) {
+                        if (response.data.code != 200) {
+                            that.$message.error(response.data.message);
+                        } else {
+                            that.$message.success({
+                                message: response.data.message,
+                                type: 'success'
+                            });
+                            that.$data.edit = false;
+                            that.$data.form = {};
+                            that.localhost();
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+            //搜索触发
+            searchs(res) {
+                this.localhost();
+            },
+            //删除触发
+            deles(res) {
+                let that = this;
+                axios.post('{:url("Admin/delPartnersList")}', res).then(function (response) {
+                    if (response.data.code != 200) {
+                        that.$message.error(response.data.message);
+                    } else {
+                        that.$message.success({
+                            message: response.data.message,
+                            type: 'success'
+                        });
+                        that.$data.mid = [];
+                        that.$data.form = {};
+                        that.localhost();
+                    }
+
+                }).catch(function (error) {
+                        console.log(error);
+                });
+            },
+        }
+    })
+</script>

@@ -1,0 +1,651 @@
+{include file="admin:public:header"}
+<style>
+    .avatar-uploader .el-upload {
+        border: 1px dashed #d9d9d9;
+        border-radius: 6px;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .avatar-uploader .el-upload:hover {
+        border-color: #409EFF;
+    }
+
+    .avatar-uploader-icon {
+        font-size: 28px;
+        color: #8c939d;
+        width: 128px;
+        height: 128px;
+        line-height: 128px;
+        text-align: center;
+    }
+
+    .avatar {
+        width: 128px;
+        height: 128px;
+        display: block;
+    }
+</style>
+<div id="app">
+    <el-card shadow="never" style="border: 0" body-style="background-color: #f3f3f3;padding: 10px 0 0;">
+        <div slot="header">
+            <div>
+                <span>TOP按钮</span>
+            </div>
+        </div>
+    </el-card>
+    <!--组件-->
+
+    <el-card>
+        <el-row>
+            <el-button type="success" size="mini" @click="adds">添加</el-button>
+        </el-row>
+    </el-card>
+    <!--组件-->
+    
+    <!--表格列表-->
+    <el-card>
+        <template>
+            <el-table ref="multipleTable" :header-cell-style="{background:'#eef1f6',color:'#606266'}"
+                :data="tableData.slice((currentPage)/pagesize,currentPage*pagesize)" tooltip-effect="dark"
+                style="width: 100%" border>
+                <el-table-column prop="zh_CN" label="标题" align="center" show-overflow-tooltip></el-table-column>
+                <el-table-column prop="link" label="链接" align="center" show-overflow-tooltip></el-table-column>
+                <el-table-column label="按钮状态" align="center" show-overflow-tooltip>
+                    <template #default="scope">
+                        <el-tag type="success" v-if="scope.row.staus == 0">链接</el-tag>
+                        <el-tag type="danger" v-if="scope.row.staus == 1">列表</el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="sort" label="排序" align="center" show-overflow-tooltip></el-table-column>
+                <el-table-column fixed="right" label="操作" align="center">
+                    <template #default="scope">
+                        <el-button @click="getlist(scope.row.id)" type="primary" size="mini" icon="el-icon-edit">按钮列表
+                        </el-button>
+                        <el-button @click="edits(scope.row)" type="primary" size="mini" icon="el-icon-edit">编辑
+                        </el-button>
+                        <el-button @click="deles(scope.row)" type="danger" size="mini" icon="el-icon-delete">删除
+                        </el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <el-pagination background style="margin-top: 10px" @size-change="handleSizeChange"
+                @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 30, 40]"
+                :page-size="100" layout="total, sizes, prev, pager, next, jumper" :total="count">
+            </el-pagination>
+        </template>
+    </el-card>
+    <!--添加弹框组件-->
+    <el-dialog title="添加" :visible.sync="add" @close="dialog" center>
+        <el-form ref="form" :model="form" label-width="150px">
+            <el-form-item label="标题(英语)">
+                <el-input v-model="form.en_US"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(中文繁体)">
+                <el-input v-model="form.zh_TW"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(中文简体)">
+                <el-input v-model="form.zh_CN"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(土耳其)">
+                <el-input v-model="form.tr_TR"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(韩语)">
+                <el-input v-model="form.ko_KR"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(日语)">
+                <el-input v-model="form.ja_JP"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(印度尼西亚语)">
+                <el-input v-model="form.in"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(泰语)">
+                <el-input v-model="form.th"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(阿拉伯语)">
+                <el-input v-model="form.ar"></el-input>
+            </el-form-item>
+            <el-form-item label="排序">
+                <el-input-number v-model="form.sort" controls-position="right" @change="handleChange" :min="1" :max="999999999999"></el-input-number>
+            </el-form-item>
+            <el-form-item label="按钮状态">
+                <el-radio-group v-model="form.staus">
+                    <el-radio-button label="0">链接</el-radio-button>
+                    <el-radio-button label="1">列表</el-radio-button>
+                </el-radio-group>
+            </el-form-item>
+            <el-form-item label="链接" v-if="form.staus==0">
+                <el-input v-model="form.link"></el-input>
+            </el-form-item>
+        </el-form>
+
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button type="primary" @click="addForm">确 定</el-button>
+                <el-button @click="add = false">取 消</el-button>
+            </span>
+        </template>
+    </el-dialog>
+    <!--编辑弹框组件-->
+    <el-dialog title="编辑" :visible.sync="edit" @close="dialog" center>
+        <el-form ref="form" :model="form" label-width="150px">
+            <el-form-item label="标题(英语)">
+                <el-input v-model="form.en_US"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(中文繁体)">
+                <el-input v-model="form.zh_TW"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(中文简体)">
+                <el-input v-model="form.zh_CN"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(土耳其)">
+                <el-input v-model="form.tr_TR"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(韩语)">
+                <el-input v-model="form.ko_KR"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(日语)">
+                <el-input v-model="form.ja_JP"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(印度尼西亚语)">
+                <el-input v-model="form.in"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(泰语)">
+                <el-input v-model="form.th"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(阿拉伯语)">
+                <el-input v-model="form.ar"></el-input>
+            </el-form-item>
+            <el-form-item label="排序">
+                <el-input-number v-model="form.sort" controls-position="right" @change="handleChange" :min="1" :max="999999999999"></el-input-number>
+            </el-form-item>
+            <el-form-item label="按钮状态">
+                <el-radio-group v-model="form.staus">
+                    <el-radio-button label="0">链接</el-radio-button>
+                    <el-radio-button label="1">列表</el-radio-button>
+                </el-radio-group>
+            </el-form-item>
+            <el-form-item label="链接" v-if="form.staus==0">
+                <el-input v-model="form.link"></el-input>
+            </el-form-item>
+        </el-form>
+
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button type="primary" @click="editForm">确 定</el-button>
+                <el-button @click="edit = false">取 消</el-button>
+            </span>
+        </template>
+    </el-dialog>
+    <!--按钮列表框组件-->
+    <el-dialog title="按钮列表" :visible.sync="staus" @close="dialog" center>
+        <el-card>
+            <el-row>
+                <el-button type="success" size="mini" @click="addsList">添加</el-button>
+            </el-row>
+        </el-card>
+        <el-card>
+            <template>
+                <el-table ref="multipleTable" :header-cell-style="{background:'#eef1f6',color:'#606266'}"
+                    :data="list.slice((currentPage)/pagesize,currentPage*pagesize)" tooltip-effect="dark"
+                    style="width: 100%" border>
+                    <el-table-column prop="zh_CN" label="标题" align="center" show-overflow-tooltip></el-table-column>
+                    <el-table-column prop="link" label="链接" align="center" show-overflow-tooltip></el-table-column>
+                    <el-table-column prop="sort" label="排序" align="center" show-overflow-tooltip></el-table-column>
+                    <el-table-column fixed="right" label="操作" align="center">
+                        <template #default="scope">
+                            <el-button @click="editsLists(scope.row)" type="primary" size="mini" icon="el-icon-edit">编辑
+                            </el-button>
+                            <el-button @click="delesLists(scope.row)" type="danger" size="mini" icon="el-icon-delete">删除
+                            </el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+                <el-pagination background style="margin-top: 10px" @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 30, 40]"
+                    :page-size="100" layout="total, sizes, prev, pager, next, jumper" :total="listCont">
+                </el-pagination>
+            </template>
+        </el-card>
+    </el-dialog>
+    <!--添加列表弹框组件-->
+    <el-dialog title="添加列表" :visible.sync="addsLists" @close="dialog" center>
+        <el-form ref="form" :model="form" label-width="150px">
+            <el-form-item label="标题(英语)">
+                <el-input v-model="form.en_US"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(中文繁体)">
+                <el-input v-model="form.zh_TW"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(中文简体)">
+                <el-input v-model="form.zh_CN"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(土耳其)">
+                <el-input v-model="form.tr_TR"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(韩语)">
+                <el-input v-model="form.ko_KR"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(日语)">
+                <el-input v-model="form.ja_JP"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(印度尼西亚语)">
+                <el-input v-model="form.in"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(泰语)">
+                <el-input v-model="form.th"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(阿拉伯语)">
+                <el-input v-model="form.ar"></el-input>
+            </el-form-item>
+            <el-form-item label="排序">
+                <el-input-number v-model="form.sort" controls-position="right" @change="handleChange" :min="1" :max="999999999999"></el-input-number>
+            </el-form-item>
+            <el-form-item label="链接">
+                <el-input v-model="form.link"></el-input>
+            </el-form-item>
+        </el-form>
+
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button type="primary" @click="addListForm">确 定</el-button>
+                <el-button @click="addsLists = false">取 消</el-button>
+            </span>
+        </template>
+    </el-dialog>
+    <!--添加列表弹框组件-->
+    <el-dialog title="添加列表" :visible.sync="editsList" @close="dialog" center>
+        <el-form ref="form" :model="form" label-width="150px">
+            <el-form-item label="标题(英语)">
+                <el-input v-model="form.en_US"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(中文繁体)">
+                <el-input v-model="form.zh_TW"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(中文简体)">
+                <el-input v-model="form.zh_CN"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(土耳其)">
+                <el-input v-model="form.tr_TR"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(韩语)">
+                <el-input v-model="form.ko_KR"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(日语)">
+                <el-input v-model="form.ja_JP"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(印度尼西亚语)">
+                <el-input v-model="form.in"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(泰语)">
+                <el-input v-model="form.th"></el-input>
+            </el-form-item>
+            <el-form-item label="标题(阿拉伯语)">
+                <el-input v-model="form.ar"></el-input>
+            </el-form-item>
+            <el-form-item label="排序">
+                <el-input-number v-model="form.sort" controls-position="right" @change="handleChange" :min="1" :max="999999999999"></el-input-number>
+            </el-form-item>
+            <el-form-item label="链接">
+                <el-input v-model="form.link"></el-input>
+            </el-form-item>
+        </el-form>
+
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button type="primary" @click="editListForm">确 定</el-button>
+                <el-button @click="editsList = false">取 消</el-button>
+            </span>
+        </template>
+    </el-dialog>
+</div>
+{include file="admin:public:bottom"}
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            currentPage: 1,
+            tableData: [],
+            search: "",
+            add: false,
+            edit: false,
+            permissions: false,
+            partners:false,
+            form: {
+                sort:1
+            },
+            pagesize: 10,
+            count: 0,
+            mneuList: [],
+            options:[],
+            defaultProps: {
+                children: 'children',
+                label: 'name',
+                value: 'id',
+
+            },
+            mid: [],
+            staus:false,
+            list:[],
+            listCont:0,
+            list_id:0,
+            addsLists:false,
+            editsList:false,
+        },
+        created() {
+            let that = this;
+            that.localhost();
+            that.getMenuList();
+        },
+        methods: {
+            localhost() {
+                let that = this;
+                axios.post('{:url("Admin/spacepiBuntton")}', {
+                    page: that.$data.currentPage,
+                    rows: that.$data.pagesize,
+                }).then(function (response) {
+                    that.$data.tableData = response.data.data;
+                    that.$data.count = response.data.count;
+                }).catch(function (error) {
+                    console.log(error);
+                });
+            },
+            //头像上传服务缓存触发
+            handleAvatarSuccess(res, file) {
+                let that = this;
+                that.$data.form.picture = '/storage/' + res.data;
+            },
+            beforeAvatarUpload(file) {
+
+            },
+            //分页数量
+            handleSizeChange(res) {
+                let that = this;
+                that.$data.pagesize = res;
+                that.localhost();
+            },
+            //分页页数
+            handleCurrentChange(res) {
+                let that = this;
+                that.$data.currentPage = res;
+                that.localhost();
+            },
+            //添加触发
+            adds() {
+                let that = this;
+                that.$data.add = true;
+            },
+            edits: function (res) {
+                let that = this;
+                that.$data.form = res;
+                that.$data.form.password = '';
+                that.$data.edit = true;
+            },
+            //关闭弹框触发
+            dialog() {
+                let that = this;
+                that.$data.mid = [];
+                that.$data.form = {
+                    sort:1
+                };
+                if (!that.add != true) {
+                    that.$refs.tree.setCheckedKeys([]);
+                }
+
+            },
+            //添加表单提交
+            addForm() {
+                let that = this;
+                if (that.$data.form.en_US == undefined || that.$data.form.en_US == '' ||
+                    that.$data.form.zh_TW == undefined || that.$data.form.zh_TW == '' ||
+                    that.$data.form.zh_CN == undefined || that.$data.form.zh_CN == '' ||
+                    that.$data.form.tr_TR == undefined || that.$data.form.tr_TR == '' ||
+                    that.$data.form.ko_KR == undefined || that.$data.form.ko_KR == '' ||
+                    that.$data.form.ja_JP == undefined || that.$data.form.ja_JP == '' ||
+                    that.$data.form.in == undefined || that.$data.form.in == '' ||
+                    that.$data.form.th == undefined || that.$data.form.th == '' ||
+                    that.$data.form.ar == undefined || that.$data.form.ar == ''
+                    ) {
+                    that.$message.error("请输入全部标题字段不能为空");
+                    return false;
+                }
+                if (that.$data.form.staus == undefined || that.$data.form.staus == '') {
+                    that.$message.error("请选择按钮状态");
+                    return false;
+                }
+                if(that.$data.form.staus == 0)
+                {
+                    if (that.$data.form.link == undefined || that.$data.form.link == '') {
+                        that.$message.error("请输入链接");
+                        return false;
+                    }
+                }
+                axios.post('{:url("Admin/addSpacepiBuntton")}', that.$data.form)
+                    .then(function (response) {
+                        if (response.data.code != 200) {
+                            that.$message.error(response.data.message);
+                        } else {
+                            that.$message.success({
+                                message: response.data.message,
+                                type: 'success'
+                            });
+                            that.$data.add = false;
+                            that.$data.form = {
+                                sort:1
+                            };
+                            that.localhost();
+                        }
+
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+            //编辑表单提交
+            editForm(res) {
+                let that = this;
+                if (that.$data.form.en_US == undefined || that.$data.form.en_US == '' ||
+                    that.$data.form.zh_TW == undefined || that.$data.form.zh_TW == '' ||
+                    that.$data.form.zh_CN == undefined || that.$data.form.zh_CN == '' ||
+                    that.$data.form.tr_TR == undefined || that.$data.form.tr_TR == '' ||
+                    that.$data.form.ko_KR == undefined || that.$data.form.ko_KR == '' ||
+                    that.$data.form.ja_JP == undefined || that.$data.form.ja_JP == '' ||
+                    that.$data.form.in == undefined || that.$data.form.in == '' ||
+                    that.$data.form.th == undefined || that.$data.form.th == '' ||
+                    that.$data.form.ar == undefined || that.$data.form.ar == ''
+                    ) {
+                    that.$message.error("请输入全部标题字段不能为空");
+                    return false;
+                }
+                if (that.$data.form.staus == undefined || that.$data.form.staus == '') {
+                    that.$message.error("请选择按钮状态");
+                    return false;
+                }
+                if(that.$data.form.staus == 0)
+                {
+                    if (that.$data.form.link == undefined || that.$data.form.link == '') {
+                        that.$message.error("请输入链接");
+                        return false;
+                    }
+                }
+                axios.post('{:url("Admin/editSpacepiBuntton")}', that.$data.form)
+                    .then(function (response) {
+                        if (response.data.code != 200) {
+                            that.$message.error(response.data.message);
+                        } else {
+                            that.$message.success({
+                                message: response.data.message,
+                                type: 'success'
+                            });
+                            that.$data.edit = false;
+                            that.$data.form = {};
+                            that.localhost();
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+            //获取复选框选中触发
+            getCheckedKeys(res) {
+                let that = this;
+                that.$data.mid = that.$refs.tree.getCheckedKeys();
+            },
+            //搜索触发
+            searchs(res) {
+                this.localhost();
+            },
+            //删除触发
+            deles(res) {
+                let that = this;
+                axios.post('{:url("Admin/delSpacepiBuntton")}', res).then(function (response) {
+                    if (response.data.code != 200) {
+                        that.$message.error(response.data.message);
+                    } else {
+                        that.$message.success({
+                            message: response.data.message,
+                            type: 'success'
+                        });
+                        that.$data.mid = [];
+                        that.$data.form = {};
+                        that.localhost();
+                    }
+
+                }).catch(function (error) {
+                        console.log(error);
+                });
+            },
+            //获取按钮列表数据
+            getlist(res){
+                let that = this;
+                axios.post('{:url("Admin/getSpacepiBunttonList")}', {
+                    id:res,
+                    page: that.$data.currentPage,
+                    rows: that.$data.pagesize,
+                }).then(function (response) {
+                    that.$data.list = response.data.data;
+                    that.$data.listCount = response.data.count;
+                }).catch(function (error) {
+                    console.log(error);
+                });
+                that.staus = true;
+                that.list_id = res;
+            },
+            //添加触发按钮列表事件
+            addsList(){
+                this.addsLists = true;
+            },
+            //添加列表数据
+            addListForm(){
+                let that = this;
+                that.$data.form.id = that.list_id;
+                if (that.$data.form.en_US == undefined || that.$data.form.en_US == '' ||
+                    that.$data.form.zh_TW == undefined || that.$data.form.zh_TW == '' ||
+                    that.$data.form.zh_CN == undefined || that.$data.form.zh_CN == '' ||
+                    that.$data.form.tr_TR == undefined || that.$data.form.tr_TR == '' ||
+                    that.$data.form.ko_KR == undefined || that.$data.form.ko_KR == '' ||
+                    that.$data.form.ja_JP == undefined || that.$data.form.ja_JP == '' ||
+                    that.$data.form.in == undefined || that.$data.form.in == '' ||
+                    that.$data.form.th == undefined || that.$data.form.th == '' ||
+                    that.$data.form.ar == undefined || that.$data.form.ar == '') {
+                    that.$message.error("请输入全部标题字段不能为空");
+                    return false;
+                }
+                if (that.$data.form.link == undefined || that.$data.form.link == '') {
+                    that.$message.error("请输入链接");
+                    return false;
+                }
+                axios.post('{:url("Admin/addSpacepiBunttonList")}', that.$data.form)
+                    .then(function (response) {
+                        if (response.data.code != 200) {
+                            that.$message.error(response.data.message);
+                        } else {
+                            that.$message.success({
+                                message: response.data.message,
+                                type: 'success'
+                            });
+                            that.$data.addsLists = false;
+                            that.$data.form = {
+                                sort:1
+                            };
+
+                            that.getlist(that.list_id);
+                        }
+
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+            //编辑按钮列表触发事件
+            editsLists(res)
+            {
+                this.form = res;
+                this.editsList = true;
+            },
+            //编辑按钮列表数据
+            editListForm()
+            {
+                let that = this;
+                if (that.$data.form.en_US == undefined || that.$data.form.en_US == '' ||
+                    that.$data.form.zh_TW == undefined || that.$data.form.zh_TW == '' ||
+                    that.$data.form.zh_CN == undefined || that.$data.form.zh_CN == '' ||
+                    that.$data.form.tr_TR == undefined || that.$data.form.tr_TR == '' ||
+                    that.$data.form.ko_KR == undefined || that.$data.form.ko_KR == '' ||
+                    that.$data.form.ja_JP == undefined || that.$data.form.ja_JP == '' ||
+                    that.$data.form.in == undefined || that.$data.form.in == '' ||
+                    that.$data.form.th == undefined || that.$data.form.th == '' ||
+                    that.$data.form.ar == undefined || that.$data.form.ar == '') {
+                    that.$message.error("请输入全部标题字段不能为空");
+                    return false;
+                }
+                if (that.$data.form.link == undefined || that.$data.form.link == '') {
+                    that.$message.error("请输入链接");
+                    return false;
+                }
+                axios.post('{:url("Admin/editSpacepiBunttonList")}', that.$data.form)
+                    .then(function (response) {
+                        if (response.data.code != 200) {
+                            that.$message.error(response.data.message);
+                        } else {
+                            that.$message.success({
+                                message: response.data.message,
+                                type: 'success'
+                            });
+                            that.$data.editsList = false;
+                            that.$data.form = {
+                                sort:1
+                            };
+
+                            that.getlist(that.list_id);
+                        }
+
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+            //删除列表数据
+            delesLists(res){
+                let that = this;
+                axios.post('{:url("Admin/delSpacepiBunttonList")}', res).then(function (response) {
+                    if (response.data.code != 200) {
+                        that.$message.error(response.data.message);
+                    } else {
+                        that.$message.success({
+                            message: response.data.message,
+                            type: 'success'
+                        });
+                        that.$data.mid = [];
+                        that.$data.form = {};
+                        that.getlist(that.list_id);
+                    }
+
+                }).catch(function (error) {
+                        console.log(error);
+                });
+            }
+        }
+    })
+</script>

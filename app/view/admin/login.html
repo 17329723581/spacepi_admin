@@ -1,0 +1,317 @@
+{include file="admin:public:header"}
+<style>
+    html,
+    body {
+        background-color: #2f3447;
+    }
+
+    #app {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .preload {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        letter-spacing: 1px;
+        background-color: #2f3447;
+    }
+
+    .preload .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        width: 100%;
+        user-select: none;
+        flex-grow: 1;
+    }
+
+    .preload .name {
+        font-size: 30px;
+        color: #fff;
+        letter-spacing: 5px;
+        font-weight: bold;
+    }
+
+    .preload .title {
+        color: #fff;
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+
+    .preload .sub-title {
+        color: #ababab;
+        font-size: 12px;
+    }
+
+    .preload .footer {
+        text-align: center;
+        padding: 10px 0 20px 0;
+    }
+
+    .preload .footer a {
+        font-size: 12px;
+        color: #ababab;
+        text-decoration: none;
+    }
+
+    .verify_img {
+        width: 90px;
+        height: 45px;
+    }
+
+    .verify {
+        position: absolute;
+        bottom: -10px;
+        right: 0;
+    }
+
+    .common-captcha {
+        height: 36px;
+        cursor: pointer;
+    }
+
+    .common-captcha .base64,
+    .common-captcha .svg {
+        height: 100%;
+    }
+
+    .page-login {
+        height: 98vh;
+        width: 98vw;
+        position: relative;
+        background-color: #2f3447;
+    }
+
+    .page-login .box {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        height: 500px;
+        width: 500px;
+        position: absolute;
+        left: calc(50% - 250px);
+        top: calc(50% - 250px);
+    }
+
+    .page-login .box .logo {
+        height: 50px;
+        margin-bottom: 20px;
+    }
+
+    .page-login .box .desc {
+        color: #ccc;
+        font-size: 12px;
+        margin-bottom: 60px;
+        letter-spacing: 1px;
+    }
+
+    .page-login .box .el-form {
+        width: 300px;
+        border-radius: 3px;
+    }
+
+    .page-login .box .el-form .el-form-item {
+        margin-bottom: 20px;
+    }
+
+    .page-login .box .el-form .el-form-item__label {
+        color: #ccc;
+    }
+
+    .page-login .box .el-form .el-input .el-input__inner {
+        border: 0;
+        border-bottom: 0.5px solid #999;
+        border-radius: 0;
+        padding: 0;
+        background-color: transparent;
+        color: #ccc;
+        -webkit-transition: border-color 0.3s;
+        transition: border-color 0.3s;
+        position: relative;
+    }
+
+    .page-login .box .el-form .el-input .el-input__inner:focus {
+        border-color: #fff;
+        color: #fff;
+    }
+
+    .page-login .box .el-form .el-input .el-input__inner:-webkit-autofill {
+        -webkit-text-fill-color: #fff !important;
+        -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+        -webkit-transition: background-color 50000s ease-in-out 0s;
+        transition: background-color 50000s ease-in-out 0s;
+    }
+
+    .page-login .box .el-form .captcha {
+        position: relative;
+    }
+
+    .page-login .box .el-form .captcha .value {
+        position: absolute;
+        bottom: 1px;
+        right: 0;
+    }
+
+    .page-login .box .submit-btn {
+        margin-top: 40px;
+        border-radius: 30px;
+        padding: 10px 40px;
+        color: #000;
+    }
+</style>
+<div id="app">
+    <div class="page-login">
+        <div class="box">
+            <!--<img src="__static__/admin/login.png" alt class="logo" />
+                    <p class="desc">Harry ADMIN是一款快速开发后台权限管理系统</p>-->
+            <!-- 表单 -->
+            <img src="__static__/admin/login.png" alt class="logo" />
+            <el-form :model="ruleForm" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+                <el-form-item label="用户名">
+                    <el-input type="text" placeholder="请输入用户名" v-model="ruleForm.username" autocomplete="off">
+                    </el-input>
+                </el-form-item>
+                <el-form-item label="密码">
+                    <el-input type="password" placeholder="请输入密码" v-model="ruleForm.password" autocomplete="off">
+                    </el-input>
+                </el-form-item>
+                <el-form-item label="验证码">
+                    <el-input placeholder="请输入验证码" v-model="ruleForm.verify" @keyup.enter.native="login"></el-input>
+                    <div class="verify">
+                        <img class="verify_img" title="点击刷新验证码" src="/captcha.html" class="code-img"
+                            onClick="this.src='/captcha.html?' + Math.random()" />
+                    </div>
+                </el-form-item>
+                <el-form-item>
+                    <el-button class="el-button submit-btn el-button--default el-button--mini is-round" type="primary"
+                        @click="login">登录</el-button>
+                </el-form-item>
+            </el-form>
+        </div>
+    </div>
+</div>
+{include file="admin:public:bottom"}
+<script>
+    new Vue({
+        el: "#app",
+        data: {
+            ruleForm: {},
+            key:'',
+        },
+        created() {
+            let that = this;
+            this.getfild();
+        },
+        methods: {
+            getfild()
+            {
+                //返回当前 URL 的查询部分（问号 ? 之后的部分）。
+                var urlParameters = location.search;
+                //声明并初始化接收请求参数的对象
+                var requestParameters = new Object();
+                //如果该求青中有请求的参数，则获取请求的参数，否则打印提示此请求没有请求的参数
+                if (urlParameters.indexOf('?') != -1)
+                {
+                    //获取请求参数的字符串
+                    var parameters = decodeURI(urlParameters.substr(1));
+                    //将请求的参数以&分割中字符串数组
+                    parameterArray = parameters.split('&');
+                    //循环遍历，将请求的参数封装到请求参数的对象之中
+                    for (var i = 0; i < parameterArray.length; i++) {
+                        requestParameters[parameterArray[i].split('=')[0]] = (parameterArray[i].split('=')[1]);
+                    }
+                    
+                }
+                else
+                {
+                    
+                }
+                this.key = requestParameters.key;
+            },
+            login() {
+                let that = this;
+                if (that.ruleForm.username == null) {
+                    that.$message.error("输入的用户名是否为空");
+                    return false;
+                }
+                if (that.ruleForm.password == null) {
+                    that.$message.error("输入的密码是否为空");
+                    return false;
+                }
+                if (that.ruleForm.verify == null) {
+                    that.$message.error("输入的验证码是否为空");
+                    return false;
+                }
+                axios
+                    .post('{:url("Admin/login")}', that.ruleForm)
+                    .then(function (response) {
+                        
+                        if (response.data.code != 200) {
+                            const loading = that.$loading({
+                                lock: true,
+                                text: "正在登录中",
+                                spinner: "fas fa-spinner fa-pulse",
+                                background: "rgba(0, 0, 0, 0.7)",
+                            });
+                            setTimeout(() => {
+                                loading.close();
+                                const loadings = that.$loading({
+                                    lock: true,
+                                    text: response.data.message,
+                                    spinner: "el-icon-error",
+                                    background: "rgba(0, 0, 0, 0.7)",
+                                });
+                                setTimeout(() => {
+                                    loadings.close();
+                                    $("#verify img").attr(
+                                        "src",
+                                        "/captcha.html?" + Math.random()
+                                    );
+                                }, 2000);
+                            }, 2000);
+                            return false;
+                        } else {
+                            const loading = that.$loading({
+                                lock: true,
+                                text: "正在登录中",
+                                spinner: "fas fa-spinner fa-pulse",
+                                background: "rgba(0, 0, 0, 0.7)",
+                            });
+                            setTimeout(() => {
+                                loading.close();
+                                const loadings = that.$loading({
+                                    lock: true,
+                                    text: response.data.message + "正在跳转中",
+                                    spinner: "fas fa-spinner fa-pulse",
+                                    background: "rgba(0, 0, 0, 0.7)",
+                                });
+                                setTimeout(() => {
+                                    
+                                    loadings.close();
+                                    location.href = '{:url("/Admin")}?key='+that.key;
+                                }, 2000);
+                            }, 2000);
+                            
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+        },
+    });
+</script>

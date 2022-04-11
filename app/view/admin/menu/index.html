@@ -1,0 +1,284 @@
+{include file="admin:public:header"}
+<style>
+
+</style>
+<div id="app">
+    <el-card shadow="never" style="border:0" body-style="background-color: #f3f3f3;padding: 10px 0 0;">
+        <div slot="header">
+            <div>
+                <span>菜单配置</span>
+            </div>
+        </div>
+    </el-card>
+    {if $elementAdmin.role_id==1}
+    <el-card>
+        <el-row>
+            <el-button type="success" size="mini" @click="adds">添加</el-button>
+        </el-row>
+    </el-card>
+    {/if}
+    <el-card>
+        <el-table :header-cell-style="{background:'#eef1f6',color:'#606266'}" ref="multipleTable" :data="tableData"
+            tooltip-effect="dark" style="width: 100%;margin-bottom: 20px;"
+            row-key="id" default-expand-all :tree-props="{children: 'children', hasChildren: 'hasChildren'}" border>
+            <el-table-column prop="name" label="菜单名称" show-overflow-tooltip>
+            </el-table-column>
+            <el-table-column prop="icon" label="菜单图标" align="center" show-overflow-tooltip>
+                <template slot-scope="scope">
+                    <i :class="scope.row.icon"></i>
+                </template>
+            </el-table-column>
+            <el-table-column prop="type" label="菜单类型" align="center" show-overflow-tooltip>
+                <template slot-scope="scope">
+                    <el-tag type="warning" v-if="scope.row.type==0"><i class="el-icon-folder"></i> 目录</el-tag>
+                    <el-tag type="primary" v-if="scope.row.type==1"><i class="el-icon-menu"></i> 菜单</el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column prop="url" label="菜单URL" align="center" show-overflow-tooltip>
+            </el-table-column>
+            <el-table-column label="创建时间" prop="create_date" align="center" sortable>
+            </el-table-column>
+            {if $elementAdmin.role_id==1}
+            <el-table-column fixed="right" label="操作" align="center">
+                <template #default="scope">
+                    <el-button @click="edits(scope.row)" type="primary" size="mini" icon="el-icon-edit"
+                        v-if="scope.row.id!=1 && scope.row.id!=2 && scope.row.id!=3 && scope.row.id!=4 && scope.row.id!=5 && scope.row.id!=6 && scope.row.id!=7 && scope.row.id!=9">编辑</el-button>
+                    <el-button @click="deles(scope.row)" type="danger" size="mini" icon="el-icon-delete"
+                        v-if="scope.row.id!=1 && scope.row.id!=2 && scope.row.id!=3 && scope.row.id!=4 && scope.row.id!=5 && scope.row.id!=6 && scope.row.id!=7 && scope.row.id!=9">删除</el-button>
+                </template>
+            </el-table-column>
+            {/if}
+        </el-table>
+    </el-card>
+    <el-dialog title="添加" :visible.sync="add" @close='dialog' center>
+        <el-form ref="form" :model="form" label-width="70px">
+            <el-form-item label="上级菜单">
+                <el-select v-model="upResName" clearable placeholder="请选择" @clear="handleClear" ref="omid">
+
+                    <el-option hidden key="upResID" :value="upResID" :label="upResName">
+                    </el-option>
+                    <el-tree :data="tableData" :props="defaultProps" :expand-on-click-node="false"
+                        :check-on-click-node="true" @node-click="handleNodeClick">
+                    </el-tree>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="菜单名称">
+                <el-input v-model="form.name"></el-input>
+            </el-form-item>
+            <el-form-item label="菜单图标">
+                <el-input v-model="form.icon"></el-input>
+            </el-form-item>
+            <el-form-item label="菜单类型">
+                <el-radio-group v-model="form.type">
+                    <el-radio label="0"><i class="el-icon-folder"></i> 目录</el-radio>
+                    <el-radio label="1"><i class="el-icon-menu"></i> 菜单</el-radio>
+                </el-radio-group>
+            </el-form-item>
+            <el-form-item label="菜单URL">
+                <el-input v-model="form.url"></el-input>
+            </el-form-item>
+        </el-form>
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button type="primary" @click="addForm">确 定</el-button>
+                <el-button @click="add = false">取 消</el-button>
+            </span>
+        </template>
+    </el-dialog>
+    <el-dialog title="编辑" :visible.sync="edit" @close='dialog' center>
+        <el-form ref="form" :model="form" label-width="80px">
+            <el-form-item label="上级菜单">
+                <el-select v-model="form.m_name" clearable placeholder="请选择" @clear="handleClear" ref="omid">
+
+                    <el-option hidden key="upResID" :value="upResID" :label="upResName" v-model="form.mid">
+                    </el-option>
+                    <el-tree :data="tableData" :props="defaultProps" :expand-on-click-node="false"
+                        :check-on-click-node="true" @node-click="handleNodeClick">
+                    </el-tree>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="菜单名称">
+                <el-input v-model="form.name"></el-input>
+            </el-form-item>
+            <el-form-item label="菜单图标">
+                <el-input v-model="form.icon"></el-input>
+            </el-form-item>
+            <el-form-item label="菜单类型">
+                <el-radio-group v-model="form.type">
+                    <el-radio :label="0"><i class="el-icon-folder"  effect="dark"></i> 目录</el-radio>
+                    <el-radio :label="1"><i class="el-icon-menu"  effect="dark"></i> 菜单</el-radio>
+                </el-radio-group>
+            </el-form-item>
+            <el-form-item label="菜单URL">
+                <el-input v-model="form.url"></el-input>
+            </el-form-item>
+        </el-form>
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button type="primary" @click="editForm">确 定</el-button>
+                <el-button @click="edit = false">取 消</el-button>
+            </span>
+        </template>
+    </el-dialog>
+</div>
+{include file="admin:public:bottom"}
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            tableData: [],
+            edit: false,
+            add: false,
+            form: {},
+            defaultProps: {
+                children: 'children',
+                label: 'name',
+                value: 'id',
+
+            },
+            upResName: '',
+            upResID: '',
+        },
+        created() {
+            let that = this;
+            that.localhost();
+        },
+        methods: {
+            localhost() {
+                let that = this;
+                axios.post('{:url("Admin/menu")}')
+                    .then(function (response) {
+                        that.$data.tableData = response.data.data;
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+            //添加触发
+            adds() {
+                let that = this;
+                that.$data.add = true;
+            },
+            //编辑触发
+            edits(res) {
+                let that = this;
+                that.$data.form = res;
+                that.$data.edit = true;
+
+            },
+            //关闭弹框触发
+            dialog() {
+                let that = this;
+                that.upResName = '';
+                that.$data.form = {};
+            },
+            //树形点击触发
+            handleNodeClick(res) {
+                let that = this;
+                that.form.mid = res.id;
+                that.form.names = res.name;
+                that.$data.upResID = res.id;
+                that.$data.upResName = res.name;
+                //console.log(that.form.mid);
+                that.$refs.omid.blur();
+
+            },
+            addForm() {
+                let that = this;
+                if (that.$data.form.name == undefined || that.$data.form.name == '') {
+                    that.$message.error("请输入菜单名称");
+                    return false;
+                }
+                if (that.$data.form.type == undefined || that.$data.form.type == '') {
+                    that.$message.error("请选择菜单类型");
+                    return false;
+                }
+                if (that.$data.form.url == undefined || that.$data.form.url == '') {
+                    that.$message.error("请输入菜单URL");
+                    return false;
+                }
+                axios.post('{:url("Admin/addMenu")}', that.$data.form)
+                    .then(function (response) {
+                        if (response.data.code != 200) {
+                            that.$message.error(response.data.message);
+                        } else {
+                            that.$message.success({
+                                message: response.data.message,
+                                type: 'success'
+                            });
+                            that.$data.add = false;
+                            that.$data.form = {};
+                            that.localhost();
+                        }
+
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+            //编辑表单提交
+            editForm() {
+                let that = this;
+                if (that.$data.form.name == undefined || that.$data.form.name == '') {
+                    that.$message.error("请输入菜单名称");
+                    return false;
+                }
+                if (that.$data.form.url == undefined || that.$data.form.url == '') {
+                    that.$message.error("请输入菜单URL");
+                    return false;
+                }
+                axios.post('{:url("Admin/editMenu")}', that.$data.form)
+                    .then(function (response) {
+                        if (response.data.code != 200) {
+                            that.$message.error(response.data.message);
+
+                        } else {
+                            that.$message.success({
+                                message: response.data.message,
+                                type: 'success'
+                            });
+
+                            that.$data.edit = false;
+                            that.$data.form = {};
+                            that.localhost();
+                        }
+
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+            //选择内容触发
+            handleClear() {
+                let that = this;
+                // 将选择器的值置空
+                that.upResName = '';
+                that.upResID = '';
+            },
+            //删除表单提交
+            deles(res) {
+                let that = this;
+                axios.post('{:url("Admin/delMenu")}', res)
+                    .then(function (response) {
+                        if (response.data.code != 200) {
+                            that.$message.error(response.data.message);
+
+                        } else {
+                            that.$message.success({
+                                message: response.data.message,
+                                type: 'success'
+                            });
+
+                            that.$data.edit = false;
+                            that.$data.form = {};
+                            that.localhost();
+                        }
+
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            }
+        }
+    })
+</script>

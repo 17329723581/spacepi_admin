@@ -1,0 +1,99 @@
+{include file="admin:public:header"}
+<link rel="stylesheet" href="/editor/css/editormd.css" />
+<style>
+
+</style>
+<div id="app">
+    <el-card shadow="never" style="border: 0" body-style="background-color: #f3f3f3;padding: 10px 0 0;">
+        <div slot="header">
+            <div>
+                <span>系统配置</span>
+            </div>
+        </div>
+    </el-card>
+    <el-card>
+        <el-tabs type="border-card">
+            <el-tab-pane label="网站配置">
+                <el-form ref="web" :model="web" label-width="100px">
+                    <el-form-item label="后端网站标题">
+                        <el-input v-model="web.admin_title"></el-input>
+                    </el-form-item>
+                    <el-form-item label="私钥">
+                        <el-input v-model="web.key"></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="webForm">保存</el-button>
+                    </el-form-item>
+                </el-form>
+            </el-tab-pane>
+            <el-tab-pane label="开发中">1</el-tab-pane>
+            <el-tab-pane label="开发中">2</el-tab-pane>
+            <el-tab-pane label="开发中">3</el-tab-pane>
+        </el-tabs>
+    </el-card>
+</div>
+{include file="admin:public:bottom"}
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            web: {
+                ranking:12,
+            },
+        },
+        created() {
+            let that = this;
+            that.getsystem();
+        },
+        methods: {
+            getsystem() {
+                let that = this;
+                axios.post('{:url("Admin/getsystem")}')
+                    .then(function (response) {
+                        console.log(response.data.data);
+                        that.$data.web = response.data.data.web;
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+            webForm() {
+                let that = this;
+                if (that.$data.web.admin_title == undefined || that.$data.web.admin_title == '') {
+                    that.$message.error("请输入后端网站标题");
+                    return false;
+                }
+                if (that.$data.web.web_title == undefined || that.$data.web.web_title == '') {
+                    that.$message.error("请输入前端网站标题");
+                    return false;
+                }
+                if (that.$data.web.second == undefined || that.$data.web.second == '') {
+                    that.$message.error("请输入前端每秒刷新");
+                    return false;
+                }
+                if (that.$data.web.qq == undefined || that.$data.web.qq == '') {
+                    that.$message.error("请输入QQ");
+                    return false;
+                }
+                if (that.$data.web.qq_group == undefined || that.$data.web.qq_group == '') {
+                    that.$message.error("请输入QQ群");
+                    return false;
+                }
+                axios.post('{:url("Admin/editweb")}', that.$data.web)
+                    .then(function (response) {
+                        if (response.data.code != 200) {
+                            that.$message.error(response.data.message);
+                        } else {
+                            that.$message.success({
+                                message: response.data.message,
+                                type: 'success'
+                            });
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            }
+        }
+    })
+</script>

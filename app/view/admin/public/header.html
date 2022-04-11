@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="__element__/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="__fontawesome__/css/all.css">
+    <title>
+        {if $elementAdmin!=""}
+        {volist name='getSystem' id='vo'}
+        {if $vo.key=='admin_title'}
+        {$vo.value}
+        {/if}
+        {/volist}
+        {/if}
+    </title>
+    <link rel="icon" href="__static__/admin/login_icon.png">
+</head>
+<style>
+    body {
+        background: #f2f2f2;
+    }
+
+    .el-loading-spinner {
+        font-size: 64px;
+    }
+</style>
+
+<body>

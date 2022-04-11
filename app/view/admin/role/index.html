@@ -1,0 +1,262 @@
+{include file="admin:public:header"}
+<style>
+
+</style>
+<div id="app">
+    <el-card shadow="never" style="border: 0" body-style="background-color: #f3f3f3;padding: 10px 0 0;">
+        <div slot="header">
+            <div>
+                <span>角色列表</span>
+            </div>
+        </div>
+    </el-card>
+    <!--组件-->
+
+    <el-card>
+        <el-form style="width: 400px">
+            <el-input v-model="search" placeholder="请输入角色名称" style="width: 80%"></el-input>
+            <el-button icon="el-icon-search" type="primary" @click="searchs"></el-button>
+        </el-form>
+    </el-card>
+    <!--组件-->
+    {if $elementAdmin.role_id==1}
+    <el-card>
+        <el-row>
+            <el-button type="success" size="mini" @click="adds">添加</el-button>
+        </el-row>
+    </el-card>
+    {/if}
+    <!--表格列表-->
+    <el-card>
+        <template>
+            <el-table ref="multipleTable" :header-cell-style="{background:'#eef1f6',color:'#606266'}"
+                :data="tableData.slice((currentPage)/pagesize,currentPage*pagesize)" tooltip-effect="dark"
+                style="width: 100%" border>
+                <el-table-column prop="name" label="角色名称" show-overflow-tooltip align="center"></el-table-column>
+                <el-table-column prop="create_date" label="创建时间" align="center" sortable></el-table-column>
+                {if $elementAdmin.role_id==1}
+                <el-table-column fixed="right" label="操作" align="center">
+                    <template #default="scope">
+                        <el-button @click="permissionss(scope.row)" type="primary" size="mini" icon="el-icon-edit"
+                            v-if="scope.row.id!==1">
+                            权限
+                        </el-button>
+                        <el-button @click="deles(scope.row)" type="danger" size="mini" icon="el-icon-delete"
+                            v-if="scope.row.id!==1">删除
+                        </el-button>
+                    </template>
+                </el-table-column>
+                {/if}
+            </el-table>
+            <el-pagination background style="margin-top: 10px" @size-change="handleSizeChange"
+                @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 30, 40]"
+                :page-size="100" layout="total, sizes, prev, pager, next, jumper" :total="count">
+            </el-pagination>
+        </template>
+    </el-card>
+    <!--弹框组件-->
+    <el-dialog title="添加" :visible.sync="add" @close="dialog" center>
+        <el-form ref="form" :model="form" label-width="70px">
+            <el-form-item label="角色名称">
+                <el-input v-model="form.name"></el-input>
+            </el-form-item>
+        </el-form>
+
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button type="primary" @click="addForm">确 定</el-button>
+                <el-button @click="add = false">取 消</el-button>
+            </span>
+        </template>
+    </el-dialog>
+    <el-dialog title="权限" :visible.sync="permissions" @close="dialog" center>
+        <el-form ref="form" :model="form" label-width="70px">
+            <el-tree ref="tree" :data="mneuList" show-checkbox node-key="id" default-expand-all @check="getCheckedKeys"
+                :default-checked-keys="form.menu_id" :props="defaultProps">
+            </el-tree>
+        </el-form>
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button type="primary" @click="permissionsForm">确 定</el-button>
+                <el-button @click="permissions = false">取 消</el-button>
+            </span>
+        </template>
+    </el-dialog>
+</div>
+{include file="admin:public:bottom"}
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            currentPage: 1,
+            tableData: [],
+            search: "",
+            add: false,
+            permissions: false,
+            form: {},
+            pagesize: 10,
+            count: 0,
+            mneuList: [],
+            defaultProps: {
+                children: 'children',
+                label: 'name',
+                value: 'id',
+
+            },
+            mid: [],
+        },
+        created() {
+            let that = this;
+            that.localhost();
+            that.getMenuList();
+        },
+        methods: {
+            localhost() {
+                let that = this;
+                axios.post('{:url("Admin/role")}', {
+                        search: that.$data.search,
+                        page: that.$data.currentPage,
+                        rows: that.$data.pagesize,
+                    })
+                    .then(function (response) {
+                        that.$data.tableData = response.data.data;
+                        that.$data.count = response.data.count;
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+            //获取菜单列表
+            getMenuList() {
+                let that = this;
+                axios.post('{:url("Admin/menu")}')
+                    .then(function (response) {
+                        that.$data.mneuList = response.data.data;
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+            //分页数量
+            handleSizeChange(res) {
+                let that = this;
+                that.$data.pagesize = res;
+                that.localhost();
+            },
+            //分页页数
+            handleCurrentChange(res) {
+                let that = this;
+                that.$data.currentPage = res;
+                that.localhost();
+            },
+            //添加触发
+            adds() {
+                let that = this;
+                that.$data.add = true;
+            },
+            //权限触发
+            permissionss(res) {
+                let that = this;
+                that.$data.form = res;
+                that.$data.permissions = true;
+            },
+            //关闭弹框触发
+            dialog() {
+                let that = this;
+                that.$data.mid = [];
+                that.$data.form = {};
+                if (!that.add != true) {
+                    that.$refs.tree.setCheckedKeys([]);
+                }
+
+            },
+            //添加表单提交
+            addForm() {
+                let that = this;
+                if (that.$data.form.name == undefined || that.$data.form.name == '') {
+                    that.$message.error("请输入角色名称");
+                    return false;
+                }
+                axios.post('{:url("Admin/addRole")}', that.$data.form)
+                    .then(function (response) {
+                        if (response.data.code != 200) {
+                            that.$message.error(response.data.message);
+                        } else {
+                            that.$message.success({
+                                message: response.data.message,
+                                type: 'success'
+                            });
+                            that.$data.add = false;
+                            that.$data.form = {};
+                            that.localhost();
+                        }
+
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+            //获取复选框选中触发
+            getCheckedKeys(res) {
+                let that = this;
+                that.$data.mid = that.$refs.tree.getCheckedKeys();
+            },
+            //权限表单提交
+            permissionsForm(res) {
+                let that = this;
+                if (that.$data.mid == undefined || that.$data.mid == '') {
+                    that.$message.error("请选择权限！权限不能为空");
+                    return false;
+                }
+                axios.post('{:url("Admin/editPermissions")}', {
+                        mid: that.$data.mid,
+                        id: that.$data.form.id
+                    })
+                    .then(function (response) {
+                        if (response.data.code != 200) {
+                            that.$message.error(response.data.message);
+                        } else {
+                            that.$message.success({
+                                message: response.data.message,
+                                type: 'success'
+                            });
+                            that.$data.permissions = false;
+                            that.$data.mid = [];
+                            that.$data.form = {};
+                            that.localhost();
+                        }
+
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+            //搜索触发
+            searchs(res) {
+                this.localhost();
+            },
+            //删除触发
+            deles(res) {
+                let that = this;
+                axios.post('{:url("Admin/delRole")}', res)
+                    .then(function (response) {
+                        if (response.data.code != 200) {
+                            that.$message.error(response.data.message);
+                        } else {
+                            that.$message.success({
+                                message: response.data.message,
+                                type: 'success'
+                            });
+                            that.$data.mid = [];
+                            that.$data.form = {};
+                            that.localhost();
+                        }
+
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            }
+        }
+    })
+</script>

@@ -1,0 +1,285 @@
+{include file="admin:public:header"}
+<style>
+    body {
+        margin: 0 auto;
+        padding: 0;
+        overflow: hidden;
+
+    }
+
+    .el-menu {
+        border-right: 0px !important;
+    }
+
+    .el-container {
+        border: 0px !important;
+
+    }
+
+    .el-main {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .el-menu-vertical-demo:not(.el-menu--collapse) {
+        width: 230px;
+        min-height: 700px auto;
+    }
+
+    .el-header {
+        background-color: white;
+        color: #333;
+        line-height: 60px;
+        border-bottom: 1px solid #f6f6f6;
+    }
+
+    .el-tabs__header {
+        padding: 0;
+        position: relative;
+        margin: 0 0 0px !important;
+
+    }
+
+    .el-header i {
+        font-size: 20px;
+        cursor: pointer;
+    }
+
+    .el-aside {
+        color: #333;
+        background-color: #303133;
+    }
+
+    .el-tabs__new-tab {
+        opacity: 0;
+
+    }
+
+    .iframe {
+        border: none;
+        width: 100%;
+        background-color: #f2f2f2;
+    }
+
+    .el-avatar {
+        background: white !important;
+    }
+</style>
+<div id="app">
+    <el-container>
+        <el-aside width="auto" :style="{'height':screenHeight}">
+            <el-menu :default-active="active" class="el-menu-vertical-demo" background-color="#303133" text-color="#fff"
+                active-text-color="#4165D7" :collapse="isopen">
+                <el-menu-item>
+                    <!--<template>
+                        <img slot="title" style="width: 100%;" shape="square" size="medium " src="/img/login.png"
+                            style="width:100%;">
+                    </template>-->
+                    <i>
+                        <img slot="title" style="width: 25px" shape="square" size="medium " src="__static__/admin/login_icon.png"
+                            >
+                    </i>
+                    <span style="font-size: 20px;" slot="title">
+                        <img slot="title" style="width: 160px" shape="square" size="medium " src="__static__/admin/login.png">
+                    </span>
+                </el-menu-item>
+
+
+                <el-submenu :index="val.url" :key="index" v-for="(val,index) in menus"
+                    v-if="val.mid ==0 && val.children.length >0">
+                    <template slot="title">
+                        <i :class="val.icon"></i>
+                        <span slot="title">{{val.name}}</span>
+                    </template>
+                    <el-menu-item-group v-for="(v,i) in val.children">
+                        <el-menu-item @click="toClick(v.name,v.url)" :index="v.url">
+                            <i :class="v.icon"></i>
+                            <span slot="title">{{v.name}}</span></el-menu-item>
+                    </el-menu-item-group>
+                </el-submenu>
+                <el-menu-item @click="toClick(val.name,val.url)" v-else :index="val.url">
+                    <i :class="val.icon"></i>
+                    <span slot="title">{{val.name}}</span>
+                </el-menu-item>
+            </el-menu>
+        </el-aside>
+
+        <el-container>
+            <el-header>
+                <i :class="headericon" @click="headericons()"></i>
+                &nbsp;&nbsp;&nbsp;
+                <i class="el-icon-refresh" @click="refresh()"></i>
+                <div style="float: right">
+                    <el-dropdown @command="command">
+                        <span class="el-dropdown-link">
+
+                            {$elementAdmin.name}
+                            <i class="fas fa-caret-down"></i>
+                        </span>
+                        <el-dropdown-menu slot="dropdown">
+                            <el-dropdown-item command="3">退出</el-dropdown-item>
+
+                        </el-dropdown-menu>
+                    </el-dropdown>
+                </div>
+
+            </el-header>
+            <el-main>
+                <el-tabs v-model="tabindex" type="card" editable @tab-remove="removetabs" @tab-click="clicktabs">
+                    <el-tab-pane :key="item.url" v-for="(item, index) in tabvals" :label="item.name" :name="item.url">
+                        <iframe v-if="src==item.url" id="mainIframe" name="mainIframe" frameborder="0" :src='src'
+                            :style="{'height':iframeHeight}" class="iframe" scrolling="auto">
+                        </iframe>
+                    </el-tab-pane>
+                </el-tabs>
+            </el-main>
+        </el-container>
+    </el-container>
+</div>
+{include file="admin:public:bottom"}
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            isopen: false,
+            headericon: "el-icon-s-fold",
+            active: "",
+            menus: [],
+            screenHeight: document.documentElement.clientHeight + "vh",
+            iframeHeight: document.documentElement.clientHeight- 100 + "px",
+            src: "{:url('Admin/home')}",
+            tabindex: "{:url('Admin/home')}",
+            tabvals: [{
+                name: "主页",
+                url: "{:url('Admin/home')}",
+            }, ],
+        },
+        created() {
+            let that = this;
+            that.localhost();
+            
+        },
+        methods: {
+            localhost() {
+                var that = this;
+                axios.post('{:url("Admin/menupermissions")}')
+                    .then(function (response) {
+                        if (response.data.code != 200) {
+
+                        } else {
+                            that.$data.menus = response.data.data;
+
+                        }
+                    })
+            },
+            command(index) {
+                let that = this;
+                switch (index) {
+                    case '1':
+
+                        break;
+                    case '2':
+                        break;
+                    case '3':
+                        //this.toClick('修改密码', 'updateadmin')
+                        this.$confirm('此操作将退出', '退出', {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            center: true
+                        }).then(() => {
+                            setTimeout(function () {
+                                //window.location.href = "{:url('Admin/exit')}";
+                            }, 500);
+
+                            axios.post('{:url("Admin/exit")}')
+                                .then(function (response) {
+                                    if (response.data.code != 200) {
+
+                                    } else {
+                                        const loading = that.$loading({
+                                            lock: true,
+                                            text: '正在退出中',
+                                            spinner: 'fas fa-spinner fa-pulse',
+                                            background: 'rgba(0, 0, 0, 0.7)'
+                                        });
+                                        setTimeout(() => {
+                                            loading.close();
+                                            const loadings = that
+                                                .$loading({
+                                                    lock: true,
+                                                    text: response
+                                                        .data
+                                                        .message +
+                                                        '正在跳转中',
+                                                    spinner: 'fas fa-spinner fa-pulse',
+                                                    background: 'rgba(0, 0, 0, 0.7)'
+                                                });
+                                            setTimeout(() => {
+                                                loadings
+                                                    .close();
+                                                location.href =
+                                                    '{:url("Admin/login")}';
+                                            }, 2000)
+                                        }, 2000);
+                                    }
+
+                                })
+                                .catch(function (error) {
+                                    console.log(error);
+                                });
+
+                        }).catch(() => {
+                            this.$message({
+                                type: 'info',
+                                message: '取消退出'
+                            });
+                        });
+                        break
+                }
+            },
+            removetabs(tabname) {
+                let that = this;
+                if (tabname != "{:url('Admin/home')}") {
+                    let index = this.tabvals.findIndex((tab) => tab.url == tabname);
+                    that.tabvals.splice(index, 1);
+                    that.tabindex = this.tabvals[index - 1].url;
+                    that.src = this.tabvals[index - 1].url;
+                }
+            },
+            clicktabs(tab) {
+                let that = this;
+                that.src = tab.name;
+            },
+            headericons() {
+                let that = this;
+                that.isopen == false ? (that.isopen = true) : (that.isopen = false);
+                that.headericon == "el-icon-s-fold" ? (that.headericon = "el-icon-s-unfold") : (that
+                    .headericon = "el-icon-s-fold");
+            },
+            refresh() {
+                let that = this;
+                document.getElementById('mainIframe').contentWindow.location.reload(true);
+            },
+            toClick(text, url) {
+                let that = this;
+                if (url != 'Admin/home') {
+                    that.active = url;
+                    let isok = that.tabvals.filter((tab) => tab.url == url);
+                    if (isok.length < 1) {
+                        that.tabvals.push({
+                            name: text,
+                            url: url,
+                        });
+                        that.tabindex = url;
+                        that.src = url;
+                    } else {
+                        that.tabindex = isok[0].url;
+                        that.src = isok[0].url;
+                    }
+                }
+
+            },
+        }
+    })
+</script>
