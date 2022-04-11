@@ -27,7 +27,8 @@ return [
             // 独立日志级别
             'apart_level'    => [],
             // 最大日志文件数量
-            'max_files'      => 0,
+            'max_files'      => 1,
+            'file_size'      => 1024 * 1024 * 2,
             // 使用JSON格式记录
             'json'           => false,
             // 日志处理
