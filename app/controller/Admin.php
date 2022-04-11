@@ -829,4 +829,38 @@ class Admin extends BaseController
         return $IndexPartners->del($param);
     }
 
+    //底部友情链接
+    public function SpacepiBottomPartners()
+    {
+        if (Request::instance()->isPost()) //判断是否isPost请求
+        {
+            $param = input(); //获取全部传过来的参数
+            $SpacepiBottomPartners = new \app\model\SpacepiBottomPartners();
+            return $SpacepiBottomPartners->getlist($param);
+
+        } else {
+            return View::fetch('admin/spacepi/bottomPartners'); //视图渲染
+        }
+    }
+    //添加底部友情链接
+    public function addSpacepiBottomPartners()
+    {
+        $param = input(); //获取全部传过来的参数
+        $SpacepiBottomPartners = new \app\model\SpacepiBottomPartners();
+        return $SpacepiBottomPartners->add($param);
+    }
+    //编辑底部友情链接
+    public function editSpacepiBottomPartners()
+    {
+        $param = input(); //获取全部传过来的参数
+        $SpacepiBottomPartners = new \app\model\SpacepiBottomPartners();
+        return $SpacepiBottomPartners->edit($param);
+    }
+    //删除底部友情链接
+    public function delSpacepiBottomPartners()
+    {
+        $param = input(); //获取全部传过来的参数
+        $SpacepiBottomPartners = new \app\model\SpacepiBottomPartners();
+        return $SpacepiBottomPartners->del($param);
+    }
 }

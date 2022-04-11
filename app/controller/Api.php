@@ -142,5 +142,24 @@ class Api extends BaseController //Api    AIP接口控制器
         }
         return json(['data' => $this->data, 'code' => $this->code, 'message' => $this->message]); //返回JSON参数
     }
+    //底部友情链接
+    public function bottomPartners()
+    {
+        $SpacepiBottomPartners = new \app\model\SpacepiBottomPartners();
+        $this->data = $SpacepiBottomPartners->order('sort asc')->select();
+        foreach($this->data as $k=>$v)
+        {
+            $this->data[$k]['picture'] = 'http://' . $_SERVER['HTTP_HOST'] . str_replace("\\", "/", $this->data[$k]['picture']);
+        }
+        if (!empty($this->data)) //判断是否有数据
+        {
+            $this->code = 200;
+            $this->message = '获取成功';
+        } else {
+            $this->code = 0;
+            $this->message = '暂无数据';
+        }
+        return json(['data' => $this->data, 'code' => $this->code, 'message' => $this->message]); //返回JSON参数
+    }
 
 }
