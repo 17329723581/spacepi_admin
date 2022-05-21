@@ -863,4 +863,19 @@ class Admin extends BaseController
         $SpacepiBottomPartners = new \app\model\SpacepiBottomPartners();
         return $SpacepiBottomPartners->del($param);
     }
+
+    // 语言包
+    public function spacepiLocale()
+    {
+        if (Request::instance()->isPost()) //判断是否isPost请求
+        {
+            $param = input(); //获取全部传过来的参数
+            $SpacepiBottomPartners = new \app\model\SpacepiBottomPartners();
+            return $SpacepiBottomPartners->getlist($param);
+
+        } else {
+            return View::fetch('admin/spacepi/locale'); //视图渲染
+        }
+    }
+
 }

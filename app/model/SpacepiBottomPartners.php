@@ -36,6 +36,7 @@ class SpacepiBottomPartners extends Model //AdminModel   底部友情链接模�
         }else{
             $this->data = $this::insert([
                 'picture' => $param['picture'],
+                'picture1'=>$param['picture1'],
                 'link' => $param['link'],
                 'sort' => $param['sort'],
                 'create_date' => time(),
@@ -57,6 +58,7 @@ class SpacepiBottomPartners extends Model //AdminModel   底部友情链接模�
     {
         $this->data = $this->where('id', $param['id'])->update([
             'picture' => $param['picture'],
+            'picture1'=>$param['picture1'],
             'link' => $param['link'],
             'sort' => $param['sort'],
         ]);

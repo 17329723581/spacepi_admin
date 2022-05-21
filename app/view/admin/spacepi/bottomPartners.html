@@ -56,6 +56,14 @@
                         </el-popover>
                     </template>
                 </el-table-column>
+                <el-table-column label="鼠标移动图标(显示)" align="center" show-overflow-tooltip>
+                    <template slot-scope="scope">
+                        <el-popover placement="top-start" title="" trigger="hover">
+                            <img :src="scope.row.picture1" alt="" style="width: 100%;">
+                            <img slot="reference" :src="scope.row.picture1" style="width: 25%;">
+                        </el-popover>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="link" label="链接" align="center" show-overflow-tooltip></el-table-column>
                 <el-table-column prop="sort" label="排序" align="center" show-overflow-tooltip></el-table-column>
                 <el-table-column fixed="right" label="操作" align="center">
@@ -83,6 +91,13 @@
                     <i v-else class="el-icon-plus avatar-uploader-icon"></i>
                 </el-upload>
             </el-form-item>
+            <el-form-item label="鼠标移动图标(显示)">
+                <el-upload class="avatar-uploader" action="{:url('Update/head')}" :show-file-list="false"
+                    :on-success="handleAvatarSuccess1" :before-upload="beforeAvatarUpload1" :on-change="handleAvatarChange1">
+                    <img v-if="update_img1" :src="update_img1" class="avatar">
+                    <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                </el-upload>
+            </el-form-item>
             <el-form-item label="链接">
                 <el-input v-model="form.link"></el-input>
             </el-form-item>
@@ -105,6 +120,13 @@
                 <el-upload class="avatar-uploader" action="{:url('Update/head')}" :show-file-list="false"
                     :on-success="handleAvatarSuccess" :before-upload="beforeAvatarUpload" :on-change="handleAvatarChange">
                     <img v-if="form.picture" :src="form.picture" class="avatar">
+                    <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                </el-upload>
+            </el-form-item>
+            <el-form-item label="鼠标移动图标(显示)">
+                <el-upload class="avatar-uploader" action="{:url('Update/head')}" :show-file-list="false"
+                    :on-success="handleAvatarSuccess1" :before-upload="beforeAvatarUpload1" :on-change="handleAvatarChange1">
+                    <img v-if="update_img1" :src="update_img1" class="avatar">
                     <i v-else class="el-icon-plus avatar-uploader-icon"></i>
                 </el-upload>
             </el-form-item>
@@ -153,6 +175,7 @@
             partnersList:[],
             p_id:0,
             update_img:'',
+            update_img1:'',
         },
         created() {
             let that = this;
@@ -183,6 +206,18 @@
             //上传不管有没有成功都会调用本地缓存图片
             handleAvatarChange(file,filelist){
                 this.update_img = URL.createObjectURL(file.raw);
+            },
+            //头像上传服务缓存触发
+            handleAvatarSuccess1(res, file) {
+                let that = this;
+                that.$data.form.picture1 = '/storage/' + res.data;
+            },
+            beforeAvatarUpload1(file) {
+
+            },
+            //上传不管有没有成功都会调用本地缓存图片
+            handleAvatarChange1(file,filelist){
+                this.update_img1 = URL.createObjectURL(file.raw);
             },
             //获取菜单列表
             getMenuList() {
@@ -234,6 +269,10 @@
             //添加表单提交
             addForm() {
                 let that = this;
+                if (that.$data.form.picture1 == undefined || that.$data.form.picture1 == '') {
+                    that.$message.error("请上传鼠标移动图标(显示)");
+                    return false;
+                }
                 if (that.$data.form.picture == undefined || that.$data.form.picture == '') {
                     that.$message.error("请上传图标");
                     return false;
@@ -266,6 +305,10 @@
             //编辑表单提交
             editForm(res) {
                 let that = this;
+                if (that.$data.form.picture1 == undefined || that.$data.form.picture1 == '') {
+                    that.$message.error("请上传鼠标移动图标(显示)");
+                    return false;
+                }
                 if (that.$data.form.picture == undefined || that.$data.form.picture == '') {
                     that.$message.error("请上传图片");
                     return false;

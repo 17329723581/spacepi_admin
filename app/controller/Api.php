@@ -126,8 +126,11 @@ class Api extends BaseController //Api    AIP接口控制器
     //重要合作商
     public function indexPartners()
     {
+        $param = input();
         $IndexPartners = new \app\model\IndexPartners();
-        $this->data = $IndexPartners->where($this->where)->order('sort asc')->select();
+        $param['page'] = empty($param['page'])?1:$param['page'];
+        $param['rows'] = empty($param['rows'])?18:$param['rows'];
+        $this->data = $IndexPartners->where($this->where)->order('sort asc')->page($param['page'], $param['rows'])->order('sort sac')->select();
         foreach($this->data as $k=>$v)
         {
             $this->data[$k]['picture'] = 'http://' . $_SERVER['HTTP_HOST'] . str_replace("\\", "/", $this->data[$k]['picture']);
@@ -150,6 +153,7 @@ class Api extends BaseController //Api    AIP接口控制器
         foreach($this->data as $k=>$v)
         {
             $this->data[$k]['picture'] = 'http://' . $_SERVER['HTTP_HOST'] . str_replace("\\", "/", $this->data[$k]['picture']);
+            $this->data[$k]['picture1'] = 'http://' . $_SERVER['HTTP_HOST'] . str_replace("\\", "/", $this->data[$k]['picture1']);
         }
         if (!empty($this->data)) //判断是否有数据
         {
